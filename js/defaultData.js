@@ -9,105 +9,86 @@
           id: 'r1',
           name: 'Runda 1',
           multiplier: 1,
-          question: 'Co zabiera się na bezludną wyspę lub wyjazd w teren?',
+          question: 'Czym przeciętnemu człowiekowi kojarzy się Mars?',
           answers: [
-            { text: 'WODA', points: 34 },
-            { text: 'NÓŻ', points: 22 },
-            { text: 'ZAPAŁKI', points: 17 },
-            { text: 'KOMPAS', points: 12 },
-            { text: 'LATARKA', points: 9 },
-            { text: 'TELEFON', points: 6 }
+            { text: 'Z BATONIKAMI', points: 45 },
+            { text: 'Z CZERWONĄ PLANETĄ', points: 35 },
+            { text: 'Z ELONEM MUSKIEM / SPACEX', points: 25 },
+            { text: 'Z KOSMITAMI (MARSJANAMI)', points: 15 },
+            { text: 'Z ŁAZIKAMI', points: 5 }
           ]
         },
         {
           id: 'r2',
-          name: 'Runda 2',
-          multiplier: 1,
-          question: 'Co kojarzy się z Marsem lub kosmosem?',
+          name: 'Runda 2 (x2)',
+          multiplier: 2,
+          question: 'Wymówka, dlaczego nie przyszedłeś/aś na wykład o 8:00 rano:',
           answers: [
-            { text: 'ŁAZIK', points: 36 },
-            { text: 'RAKIETA', points: 25 },
-            { text: 'ASTRONAUTA', points: 18 },
-            { text: 'CZERWONY PYŁ', points: 12 },
-            { text: 'GWIAZDY', points: 9 }
+            { text: 'SIEDZIAŁEM W WARSZTACIE DO 4', points: 45 },
+            { text: 'ZASPAŁEM', points: 35 },
+            { text: 'BUDZIK NIE ZADZWONIŁ', points: 25 },
+            { text: 'LUTOWAŁEM PŁYTKĘ', points: 15 },
+            { text: 'KORKI NA MIEŚCIE', points: 5 }
           ]
         },
         {
           id: 'r3',
-          name: 'Runda 3 (x2)',
-          multiplier: 2,
-          question: 'Bez czego nie może obejść się student politechniki przed sesją?',
-          answers: [
-            { text: 'KAWA', points: 41 },
-            { text: 'NOTATKI', points: 24 },
-            { text: 'LAPTOP', points: 16 },
-            { text: 'DŁUGOPIS', points: 11 },
-            { text: 'NAPÓJ ENERGETYCZNY', points: 8 }
-          ]
-        },
-        {
-          id: 'r4',
-          name: 'Runda 4 (x3)',
+          name: 'Runda 3 (x3)',
           multiplier: 3,
-          question: 'Jakie zwierzę można najczęściej spotkać w polskim lesie?',
+          question: 'Czego zawsze brakuje w warsztacie na dzień przed zawodami?',
           answers: [
-            { text: 'DZIK', points: 38 },
-            { text: 'SARNA', points: 29 },
-            { text: 'LIS', points: 20 },
-            { text: 'ZAJĄC', points: 13 }
+            { text: 'SNU', points: 45 },
+            { text: 'ŚRUBEK', points: 35 },
+            { text: 'TRYTYTEK', points: 25 },
+            { text: 'KAWY', points: 15 },
+            { text: 'PIENIĘDZY W BUDŻECIE', points: 5 }
           ]
         }
       ],
       finale: [
         {
-          question: 'Wymień środek transportu miejskiego.',
+          question: 'Coś srebrnego',
           answers: [
-            { text: 'AUTOBUS', points: 42, synonyms: 'BUS' },
-            { text: 'TRAMWAJ', points: 28, synonyms: '' },
-            { text: 'METRO', points: 15, synonyms: 'KOLEJKA' },
-            { text: 'ROWER', points: 8, synonyms: 'HULAJNOGA' },
-            { text: 'TAKSÓWKA', points: 5, synonyms: 'TAXI' },
-            { text: 'TROLEJBUS', points: 2, synonyms: '' }
+            { text: 'SREBRO', points: 45, synonyms: 'SREBRNY, SREBRNA' },
+            { text: 'ALUMINIUM', points: 25, synonyms: 'ALU, FOLIA ALUMINIOWA' },
+            { text: 'ŚRUBKI', points: 10, synonyms: 'ŚRUBA, ŚRUBKA, ŚRUBY' },
+            { text: 'BRAK ODPOWIEDZI', points: 0, synonyms: 'BRAK, PAS, DALEJ, -' }
           ]
         },
         {
-          question: 'Co najchętniej pijemy rano do śniadania?',
+          question: 'Ulubione jedzenie studenta',
           answers: [
-            { text: 'KAWA', points: 48, synonyms: 'KAWĘ, ESPRESSO, CAPPUCCINO' },
-            { text: 'HERBATA', points: 31, synonyms: 'HERBATĘ' },
-            { text: 'SOK', points: 11, synonyms: 'SOK POMARAŃCZOWY' },
-            { text: 'WODA', points: 6, synonyms: 'WODĘ' },
-            { text: 'MLEKO', points: 4, synonyms: 'KAKAO' }
+            { text: 'KEBAB', points: 45, synonyms: 'KEBS, KEBABA' },
+            { text: 'ZAPIEKANKA', points: 25, synonyms: 'ZAPIEKS, ZAPIEKANKI' },
+            { text: 'SŁOIKI', points: 10, synonyms: 'SŁOIK, OD MAMY' },
+            { text: 'BRAK ODPOWIEDZI', points: 0, synonyms: 'BRAK, PAS, DALEJ, -' }
           ]
         },
         {
-          question: 'Podaj kolor, który często występuje na flagach państw.',
+          question: 'Wymień miasto na Podkarpaciu',
           answers: [
-            { text: 'CZERWONY', points: 45, synonyms: 'CZERWIEŃ' },
-            { text: 'BIAŁY', points: 27, synonyms: 'BIEL' },
-            { text: 'NIEBIESKI', points: 16, synonyms: 'BŁĘKITNY, GRANATOWY' },
-            { text: 'ZIELONY', points: 7, synonyms: 'ZIELEŃ' },
-            { text: 'ŻÓŁTY', points: 5, synonyms: 'ZŁOTY' }
+            { text: 'RZESZÓW', points: 45, synonyms: 'RZESZOW' },
+            { text: 'STALOWA WOLA', points: 25, synonyms: 'STALOWA' },
+            { text: 'PRZEMYŚL', points: 10, synonyms: 'PRZEMYSL' },
+            { text: 'BRAK ODPOWIEDZI', points: 0, synonyms: 'BRAK, PAS, DALEJ, -' }
           ]
         },
         {
-          question: 'Narzędzie, które każdy ma w skrzynce w garażu.',
+          question: 'Znany astronauta',
           answers: [
-            { text: 'MŁOTEK', points: 44, synonyms: '' },
-            { text: 'ŚRUBOKRĘT', points: 29, synonyms: 'WKRĘTAK' },
-            { text: 'KLUCZ', points: 14, synonyms: 'KLUCZ PŁASKI, FRANCUSKI' },
-            { text: 'KOMBINERKI', points: 8, synonyms: 'SZCZYPCE' },
-            { text: 'MIARKA', points: 5, synonyms: 'METRÓWKA' }
+            { text: 'ARMSTRONG', points: 45, synonyms: 'NEIL ARMSTRONG, NEIL' },
+            { text: 'BUZZ ALDRIN', points: 25, synonyms: 'ALDRIN, BUZZ' },
+            { text: 'SŁAWOSZ UZNAŃSKI-WIŚNIEWSKI', points: 10, synonyms: 'SŁAWOSZ, UZNAŃSKI, WIŚNIEWSKI, SŁAWOSZ UZNAŃSKI, UZNAŃSKI WIŚNIEWSKI' },
+            { text: 'BRAK ODPOWIEDZI', points: 0, synonyms: 'BRAK, PAS, DALEJ, -' }
           ]
         },
         {
-          question: 'Co robimy natychmiast po powrocie z pracy lub uczelni?',
+          question: 'Więcej niż jedno zwierzę',
           answers: [
-            { text: 'JEMY OBIAD', points: 39, synonyms: 'OBIAD, JEMY, JEDZENIE' },
-            { text: 'MYJEMY RĘCE', points: 24, synonyms: 'PRYSZNIC, MYCIE' },
-            { text: 'PRZEBIERAMY SIĘ', points: 18, synonyms: 'ZDEJMUJEMY BUTY' },
-            { text: 'ODPOCZYWAMY', points: 12, synonyms: 'DRZEMKA, LEŻYMY' },
-            { text: 'WŁĄCZAMY KOMPUTER', points: 7, synonyms: 'TELEWIZOR, TELEFON' }
+            { text: 'LAMA', points: 45, synonyms: 'LAMY' },
+            { text: 'WATAHA', points: 25, synonyms: 'WATAHY' },
+            { text: 'STADO', points: 10, synonyms: 'STADA' },
+            { text: 'BRAK ODPOWIEDZI', points: 0, synonyms: 'BRAK, PAS, DALEJ, -' }
           ]
         }
       ],
@@ -150,11 +131,11 @@
   function getSampleStageCsv() {
     return '\uFEFF' + [
       'odpowiedz;punkty',
-      'ŁAZIK;36',
-      'RAKIETA;25',
-      'ASTRONAUTA;18',
-      'CZERWONY PYŁ;12',
-      'GWIAZDY;9'
+      'Z BATONIKAMI;45',
+      'Z CZERWONĄ PLANETĄ;35',
+      'Z ELONEM MUSKIEM / SPACEX;25',
+      'Z KOSMITAMI (MARSJANAMI);15',
+      'Z ŁAZIKAMI;5'
     ].join('\r\n');
   }
 

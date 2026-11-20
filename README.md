@@ -42,18 +42,18 @@ W trybie gry ekran stanowi **100% czysta tablica** przeznaczona do wyświetlenia
 | `Z` | Cofnij ostatnią akcję (`Undo`) |
 | `M` / `G` / `R` | Mnożnik (`×1/×2/×3`) / Skok do Finału / Reset bieżącej rundy |
 
-### Finał (2 graczy, 5 pytań, 15s / 20s, cel 200 pkt)
+### Finał (2 graczy, 5 pytań, 15s / +5s = 20s, cel 200 pkt)
 | Klawisz | Działanie |
 |---|---|
-| `↑` / `↓` / `←` / `→` | Wybierz wiersz `1`–`5` oraz gracza (`1` / `2`) |
-| `Enter` | Wpisz hasło → zatwierdź → drugie `Enter` odkrywa punkty |
-| `Tab` (podczas pisania) | Anuluj wpisywanie tekstu |
-| `TEKST=42` (podczas pisania) | Zapisuje odpowiedź `TEKST` z ukrytymi punktami `42` |
+| `1` – `5` (lub `↑` / `↓`) | Ustaw kursor (boczny punkcik) na wierszu `1`–`5` |
+| `Q` / `W` / `E` | Wybierz 1. (`45` pkt) / 2. (`25` pkt) / 3. (`10` pkt) odpowiedź (odkrycie punktów z dźwiękiem po chwili; u Gracza 2 zablokowane dla odpowiedzi już wybranych przez Gracza 1) |
+| `0` (lub `A`) | Wstaw `BRAK ODPOWIEDZI` (`0` pkt) |
+| `←` / `→` | Przełącz na Gracza 1 (`15s`) / Gracza 2 (`+5s` = `20s`, automatyczne ukrycie kolumny Gracza 1) |
 | `Spacja` (lub `T`) | Start / Pauza stopera (`15s` / `20s`) |
 | `R` | Reset stopera (`15s` / `20s`) |
-| `X` (lub `D`) | Brzęczyk powtórzonej odpowiedzi |
 | `M` | Ukryj / Pokaż odpowiedzi Gracza 1 |
-| `P` | Dyskretny wpis punktów na wierszu: wpisz cyfry + `Enter` |
+| `X` (lub `D`) | Brzęczyk powtórzonej odpowiedzi |
+| `Shift` + `1`–`5` | Cofnij odkrycie punktów / wiersza |
 | `Backspace` / `Delete` | Wyczyść wybrany wiersz (`Shift+R` czyści cały Finał) |
 | `PageUp` (lub `B`) | Powrót do ostatniej rundy standardowej |
 

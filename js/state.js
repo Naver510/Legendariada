@@ -1,7 +1,7 @@
 (function (global) {
   'use strict';
 
-  const STORAGE_KEY = 'legendariada_data_v1';
+  const STORAGE_KEY = 'legendariada_data_v5';
   const MAX_HISTORY = 30;
 
   let data = null;
@@ -24,7 +24,7 @@
   function createEmptyFinaleColumn() {
     const arr = [];
     for (let i = 0; i < 5; i++) {
-      arr.push({ text: '', points: null, pointsRevealed: false, customPoints: null });
+      arr.push({ text: '', textRevealed: false, points: null, pointsRevealed: false, customPoints: null, variantIndex: null });
     }
     return arr;
   }
@@ -134,11 +134,10 @@
       game.roundSum = 0;
       return;
     }
-    const mult = r.multiplier || 1;
     let sum = 0;
     for (let i = 0; i < r.answers.length; i++) {
       if (game.revealed[i]) {
-        sum += (Number(r.answers[i].points) || 0) * mult;
+        sum += Number(r.answers[i].points) || 0;
       }
     }
     game.roundSum = sum;
@@ -249,7 +248,7 @@
     pushSnapshot();
     game.revealed[idx] = true;
     if (!noScore && game.roundAwardedTo === null) {
-      game.roundSum += (Number(r.answers[idx].points) || 0) * (r.multiplier || 1);
+      game.roundSum += Number(r.answers[idx].points) || 0;
     }
     emit('round');
     return { changed: true, revealed: true };
@@ -335,7 +334,11 @@
     if (game.roundAwardedTo !== null) return false;
     if (game.roundSum <= 0) return false;
     pushSnapshot();
-    game.scores[side] += game.roundSum;
+    const r = getCurrentRound();
+    const mult = r ? (r.multiplier || 1) : 1;
+    const awarded = game.roundSum * mult;
+    game.roundSum = awarded;
+    game.scores[side] += awarded;
     game.roundAwardedTo = side;
     emit('round');
     return true;
@@ -387,6 +390,11 @@
     return 'title';
   }
 
+  function getFinaleTimeForPlayer(playerIdx) {
+    const t1 = Number(data.settings.finaleTimeP1) || 15;
+    return playerIdx === 1 ? t1 + 5 : t1;
+  }
+
   // Finał
   function resetFinaleBoard() {
     finaleState.p1 = createEmptyFinaleColumn();
@@ -398,7 +406,7 @@
     finaleState.pointsInputMode = false;
     finaleState.pointsBuffer = '';
     finaleState.maskPlayer1 = false;
-    finaleState.timerSeconds = data.settings.finaleTimeP1 || 15;
+    finaleState.timerSeconds = getFinaleTimeForPlayer(0);
     finaleState.timerRunning = false;
     finaleState.duplicateFlashUntil = 0;
     finaleState.wonTriggered = false;
@@ -465,13 +473,35 @@
     return false;
   }
 
+  function finalePlayerHasAnswers(playerIdx) {
+    const col = playerIdx === 1 ? finaleState.p2 : finaleState.p1;
+    return col.some(function (s) { return Boolean(s.text); });
+  }
+
+  function finaleSwitchPlayer(playerIdx) {
+    const nextP = playerIdx === 1 ? 1 : 0;
+    finaleState.activePlayer = nextP;
+    finaleState.activeRow = 0;
+    finaleState.timerRunning = false;
+    finaleState.timerSeconds = getFinaleTimeForPlayer(nextP);
+    if (
+      nextP === 1 &&
+      finaleState.p1.some(function (s) { return s.textRevealed; }) &&
+      !finalePlayerHasAnswers(1)
+    ) {
+      finaleState.maskPlayer1 = true;
+    }
+    emit('finale');
+  }
+
   function finaleMove(dRow, dCol) {
     if (finaleState.typingMode || finaleState.pointsInputMode) return;
     if (dRow !== 0) {
       finaleState.activeRow = (finaleState.activeRow + dRow + 5) % 5;
     }
     if (dCol !== 0) {
-      finaleState.activePlayer = dCol > 0 ? 1 : 0;
+      finaleSwitchPlayer(dCol > 0 ? 1 : 0);
+      return;
     }
     emit('finale');
   }
@@ -491,8 +521,9 @@
       }
     }
     const clean = global.FamiliadaFont.toBoardUpper(textPart).trim();
-    slot.text = clean;
-    slot.customPoints = customPoints;
+    slot.text = clean || 'BRAK ODPOWIEDZI';
+    slot.textRevealed = true;
+    slot.customPoints = clean ? customPoints : 0;
     slot.points = null;
     slot.pointsRevealed = false;
     finaleState.typingMode = false;
@@ -521,6 +552,7 @@
     const pts = Number.isNaN(val) ? 0 : Math.max(0, val);
     slot.customPoints = pts;
     slot.points = pts;
+    slot.textRevealed = true;
     slot.pointsRevealed = true;
     if (!slot.text) slot.text = 'ODPOWIEDŹ';
     finaleState.pointsInputMode = false;
@@ -528,6 +560,96 @@
     const wonNow = checkFinaleWin();
     emit('finale');
     return { revealedPoints: pts, wonNow: wonNow };
+  }
+
+  function finaleIsDuplicateForP2(rowIdx, text) {
+    if (rowIdx < 0 || rowIdx >= 5) return false;
+    const p1Text = finaleState.p1[rowIdx] ? finaleState.p1[rowIdx].text : '';
+    const p1Norm = normalizeForMatch(p1Text);
+    const p2Norm = normalizeForMatch(text);
+    if (!p1Norm || !p2Norm) return false;
+    if (p1Norm === 'BRAK ODPOWIEDZI' || p2Norm === 'BRAK ODPOWIEDZI') return false;
+    return p1Norm === p2Norm;
+  }
+
+  function finaleSavePlayerAnswers(playerIdx, rawAnswers) {
+    const col = playerIdx === 1 ? finaleState.p2 : finaleState.p1;
+    for (let i = 0; i < 5; i++) {
+      const raw = String((rawAnswers && rawAnswers[i]) || '').trim();
+      const eqIdx = raw.indexOf('=');
+      let textPart = raw;
+      let customPoints = null;
+      if (eqIdx !== -1) {
+        textPart = raw.slice(0, eqIdx);
+        const ptsRaw = raw.slice(eqIdx + 1).trim();
+        const parsed = parseInt(ptsRaw, 10);
+        if (!Number.isNaN(parsed) && parsed >= 0) {
+          customPoints = parsed;
+        }
+      }
+      const clean = global.FamiliadaFont.toBoardUpper(textPart).trim();
+      if (!clean) {
+        col[i] = {
+          text: 'BRAK ODPOWIEDZI',
+          textRevealed: false,
+          points: null,
+          pointsRevealed: false,
+          customPoints: 0
+        };
+      } else {
+        col[i] = {
+          text: clean,
+          textRevealed: false,
+          points: null,
+          pointsRevealed: false,
+          customPoints: customPoints
+        };
+      }
+    }
+    finaleState.activePlayer = playerIdx === 1 ? 1 : 0;
+    finaleState.activeRow = 0;
+    finaleState.timerRunning = false;
+    emit('finale');
+  }
+
+  function finaleRevealStep(rowIdx) {
+    if (rowIdx < 0 || rowIdx >= 5) return { action: 'invalid' };
+    finaleState.activeRow = rowIdx;
+    const slot = getActiveFinaleSlot();
+    if (!slot.text) {
+      emit('finale');
+      return { action: 'empty', row: rowIdx };
+    }
+    if (!slot.textRevealed) {
+      slot.textRevealed = true;
+      emit('finale');
+      return { action: 'textRevealed', row: rowIdx };
+    }
+    if (!slot.pointsRevealed) {
+      const pts = slot.customPoints !== null
+        ? slot.customPoints
+        : lookupFinalePoints(rowIdx, slot.text);
+      slot.points = pts;
+      slot.pointsRevealed = true;
+      const wonNow = checkFinaleWin();
+      emit('finale');
+      return { action: 'pointsRevealed', row: rowIdx, points: pts, wonNow: wonNow };
+    }
+    emit('finale');
+    return { action: 'alreadyRevealed', row: rowIdx };
+  }
+
+  function finaleHideRow(rowIdx) {
+    if (rowIdx < 0 || rowIdx >= 5) return;
+    finaleState.activeRow = rowIdx;
+    const slot = getActiveFinaleSlot();
+    if (slot.pointsRevealed) {
+      slot.pointsRevealed = false;
+      slot.points = null;
+    } else if (slot.textRevealed) {
+      slot.textRevealed = false;
+    }
+    emit('finale');
   }
 
   function finaleHandleEnter() {
@@ -541,33 +663,112 @@
     }
     const slot = getActiveFinaleSlot();
     if (!slot.text) {
-      finaleState.typingMode = true;
-      finaleState.typingBuffer = '';
-      emit('finale');
-      return { action: 'typing' };
+      return { action: 'empty', row: finaleState.activeRow };
     }
-    if (!slot.pointsRevealed) {
-      const pts = slot.customPoints !== null
-        ? slot.customPoints
-        : lookupFinalePoints(finaleState.activeRow, slot.text);
-      slot.points = pts;
-      slot.pointsRevealed = true;
-      const wonNow = checkFinaleWin();
-      emit('finale');
-      return { action: 'revealed', points: pts, wonNow: wonNow };
+    return finaleRevealStep(finaleState.activeRow);
+  }
+
+  function finalePickVariant(variantIndex) {
+    if (finaleState.typingMode || finaleState.pointsInputMode) return { picked: false };
+    const q = data.finale[finaleState.activeRow];
+    if (!q || !Array.isArray(q.answers)) return { picked: false };
+
+    let chosen = null;
+    if (variantIndex === 'none') {
+      chosen = q.answers.find(function (a) { return Number(a.points) === 0; }) ||
+        { text: 'BRAK ODPOWIEDZI', points: 0 };
+    } else if (variantIndex >= 0 && variantIndex < q.answers.length) {
+      chosen = q.answers[variantIndex];
     }
-    finaleState.typingMode = true;
-    finaleState.typingBuffer = slot.text + (slot.customPoints !== null ? '=' + slot.customPoints : '');
+    if (!chosen) return { picked: false };
+
+    const slot = getActiveFinaleSlot();
+    slot.text = global.FamiliadaFont.toBoardUpper(chosen.text);
+    slot.textRevealed = false;
+    slot.customPoints = Number(chosen.points) || 0;
+    slot.points = null;
+    slot.pointsRevealed = false;
+    if (finaleState.activeRow < 4) {
+      finaleState.activeRow += 1;
+    }
     emit('finale');
-    return { action: 'typing' };
+    return { picked: true, text: slot.text, points: slot.customPoints };
+  }
+
+  function finaleSelectRow(rowIdx) {
+    if (rowIdx < 0 || rowIdx >= 5) return;
+    finaleState.activeRow = rowIdx;
+    emit('finale');
+  }
+
+  function finaleSelectVariant(variantIdx) {
+    if (finaleState.typingMode || finaleState.pointsInputMode) return { action: 'busy' };
+    const rowIdx = finaleState.activeRow;
+    const q = data.finale[rowIdx];
+    if (!q || !Array.isArray(q.answers)) return { action: 'invalid' };
+
+    const isNone = variantIdx === 'none' || variantIdx === 3;
+    if (!isNone && finaleState.activePlayer === 1) {
+      const p1Slot = finaleState.p1[rowIdx];
+      if (p1Slot && p1Slot.variantIndex === variantIdx) {
+        finaleTriggerDuplicate();
+        return { action: 'blocked', row: rowIdx, variant: variantIdx };
+      }
+    }
+
+    let chosen = null;
+    let resolvedIdx = 3;
+    if (isNone) {
+      const noneIdx = q.answers.findIndex(function (a) { return Number(a.points) === 0; });
+      chosen = noneIdx >= 0 ? q.answers[noneIdx] : { text: 'BRAK ODPOWIEDZI', points: 0 };
+      resolvedIdx = 3;
+    } else if (variantIdx >= 0 && variantIdx < q.answers.length) {
+      chosen = q.answers[variantIdx];
+      resolvedIdx = variantIdx;
+    }
+    if (!chosen) return { action: 'invalid' };
+
+    const slot = getActiveFinaleSlot();
+    const pts = Number(chosen.points) || 0;
+    slot.text = global.FamiliadaFont.toBoardUpper(chosen.text);
+    slot.variantIndex = resolvedIdx;
+    slot.textRevealed = true;
+    slot.points = pts;
+    slot.pointsRevealed = false;
+    slot.customPoints = pts;
+    emit('finale');
+    return {
+      action: 'selected',
+      player: finaleState.activePlayer,
+      row: rowIdx,
+      text: slot.text,
+      points: pts
+    };
+  }
+
+  function finaleRevealPoints(playerIdx, rowIdx) {
+    if (rowIdx < 0 || rowIdx >= 5) return { revealed: false };
+    const col = playerIdx === 1 ? finaleState.p2 : finaleState.p1;
+    const slot = col[rowIdx];
+    if (!slot || !slot.textRevealed || slot.pointsRevealed) return { revealed: false };
+    const pts = slot.points !== null
+      ? slot.points
+      : (slot.customPoints !== null ? slot.customPoints : lookupFinalePoints(rowIdx, slot.text));
+    slot.points = pts;
+    slot.pointsRevealed = true;
+    const wonNow = checkFinaleWin();
+    emit('finale');
+    return { revealed: true, player: playerIdx, row: rowIdx, points: pts, wonNow: wonNow };
   }
 
   function finaleClearActiveRow() {
     const slot = getActiveFinaleSlot();
     slot.text = '';
+    slot.textRevealed = false;
     slot.points = null;
     slot.pointsRevealed = false;
     slot.customPoints = null;
+    slot.variantIndex = null;
     finaleState.typingMode = false;
     finaleState.typingBuffer = '';
     finaleState.pointsInputMode = false;
@@ -583,9 +784,7 @@
 
   function finaleResetTimer() {
     finaleState.timerRunning = false;
-    finaleState.timerSeconds = finaleState.activePlayer === 0
-      ? (Number(data.settings.finaleTimeP1) || 15)
-      : (Number(data.settings.finaleTimeP2) || 20);
+    finaleState.timerSeconds = getFinaleTimeForPlayer(finaleState.activePlayer);
     emit('finale');
   }
 
@@ -679,8 +878,19 @@
     resetFinaleBoard: resetFinaleBoard,
     lookupFinalePoints: lookupFinalePoints,
     getFinaleTotal: getFinaleTotal,
+    getFinaleTimeForPlayer: getFinaleTimeForPlayer,
+    finalePlayerHasAnswers: finalePlayerHasAnswers,
+    finaleSwitchPlayer: finaleSwitchPlayer,
+    finaleSavePlayerAnswers: finaleSavePlayerAnswers,
+    finaleIsDuplicateForP2: finaleIsDuplicateForP2,
+    finaleRevealStep: finaleRevealStep,
+    finaleHideRow: finaleHideRow,
+    finaleSelectRow: finaleSelectRow,
+    finaleSelectVariant: finaleSelectVariant,
+    finaleRevealPoints: finaleRevealPoints,
     finaleMove: finaleMove,
     finaleHandleEnter: finaleHandleEnter,
+    finalePickVariant: finalePickVariant,
     finaleCancelTyping: finaleCancelTyping,
     finaleStartPointsInput: finaleStartPointsInput,
     finaleClearActiveRow: finaleClearActiveRow,

@@ -303,7 +303,7 @@
 
       const textInp = document.createElement('input');
       textInp.type = 'text';
-      textInp.maxLength = 28;
+      textInp.maxLength = 48;
       textInp.placeholder = 'Treść odpowiedzi';
       textInp.value = ans.text || '';
       textInp.addEventListener('input', function () {
@@ -353,8 +353,9 @@
 
   function renderFinaleTab() {
     const data = global.FamiliadaState.getData();
-    el('inp-finale-t1').value = String(data.settings.finaleTimeP1 || 15);
-    el('inp-finale-t2').value = String(data.settings.finaleTimeP2 || 20);
+    const t1 = Number(data.settings.finaleTimeP1) || 15;
+    el('inp-finale-t1').value = String(t1);
+    el('inp-finale-t2').value = String(t1 + 5);
     el('inp-finale-target').value = String(data.settings.finaleTarget || 200);
 
     const grid = el('finale-editor-list');
@@ -430,9 +431,10 @@
         const row = document.createElement('div');
         row.className = 'finale-ans-row';
 
+        const keyHints = ['Q', 'W', 'E', '0'];
         const inpText = document.createElement('input');
         inpText.type = 'text';
-        inpText.placeholder = 'Hasło';
+        inpText.placeholder = 'Klawisz [' + (keyHints[aIdx] || (aIdx + 1)) + ']';
         inpText.value = ans.text || '';
         inpText.addEventListener('input', function () {
           ans.text = inpText.value;
@@ -608,12 +610,15 @@
       html += '</tbody></table></div>';
     });
 
+    const t1 = Number(data.settings.finaleTimeP1) || 15;
     html += '<div class="print-round"><h2>Finał (cel: ' + (data.settings.finaleTarget || 200) + ' pkt · ' +
-      (data.settings.finaleTimeP1 || 15) + 's / ' + (data.settings.finaleTimeP2 || 20) + 's)</h2>';
+      t1 + 's / ' + (t1 + 5) + 's)</h2>';
+    const finaleKeyTags = ['Q', 'W', 'E', '0'];
     data.finale.forEach(function (f, idx) {
       html += '<p><strong>' + (idx + 1) + '. ' + escapeHtml(f.question) + '</strong><br>';
-      html += f.answers.map(function (a) {
-        return escapeHtml(a.text) + ' (' + a.points + ')';
+      html += f.answers.map(function (a, aIdx) {
+        const tag = finaleKeyTags[aIdx] ? ('[' + finaleKeyTags[aIdx] + '] ') : '';
+        return tag + escapeHtml(a.text) + ' (' + a.points + ')';
       }).join(' · ');
       html += '</p>';
     });
@@ -622,6 +627,7 @@
     html += '<div class="print-shortcuts"><strong>Skróty:</strong> ' +
       '[1-8] Odkryj odp. | [Q/P] Mały X Lewa/Prawa (cykl) | [W/O] Duży X Lewa/Prawa | [0/C] Czyść X | ' +
       '[←/→] Przyznaj pulę | [Spacja] Odkryj resztę | [Enter] Następny etap | [Backspace] Poprzedni etap | ' +
+      '[Finał 1-5] Wiersz | [Finał Q/W/E/0] Wybierz odp. (45/25/10/0) | [Finał ←/→] Gracz 1/2 (+5s, blokada powtórek) | ' +
       '[Z] Cofnij | [F] Fullscreen | [F2] Edytor | [H] Ściągawka</div>';
 
     sheet.innerHTML = html;
@@ -769,14 +775,17 @@
     });
 
     el('inp-finale-t1').addEventListener('change', function () {
-      const val = Math.max(5, Math.min(99, parseInt(this.value, 10) || 15));
-      global.FamiliadaState.updateData(function (d) { d.settings.finaleTimeP1 = val; });
+      const val = Math.max(5, Math.min(94, parseInt(this.value, 10) || 15));
+      this.value = String(val);
+      el('inp-finale-t2').value = String(val + 5);
+      global.FamiliadaState.updateData(function (d) {
+        d.settings.finaleTimeP1 = val;
+        d.settings.finaleTimeP2 = val + 5;
+      });
     });
 
-    el('inp-finale-t2').addEventListener('change', function () {
-      const val = Math.max(5, Math.min(99, parseInt(this.value, 10) || 20));
-      global.FamiliadaState.updateData(function (d) { d.settings.finaleTimeP2 = val; });
-    });
+    el('inp-finale-t2').readOnly = true;
+    el('inp-finale-t2').title = 'Czas Gracza 2 wynosi zawsze +5s względem Gracza 1';
 
     el('inp-finale-target').addEventListener('change', function () {
       const val = Math.max(10, Math.min(999, parseInt(this.value, 10) || 200));

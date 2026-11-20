@@ -4,12 +4,61 @@
   let cursorTimer = null;
   let lastFinaleTick = 0;
   let cascadeTimers = [];
+  let finaleRevealTimers = [];
   let isTransitioning = false;
 
   function clearCascadeTimers() {
     while (cascadeTimers.length) {
       clearTimeout(cascadeTimers.pop());
     }
+  }
+
+  function clearPendingFinaleReveals() {
+    while (finaleRevealTimers.length) {
+      clearTimeout(finaleRevealTimers.pop().tid);
+    }
+  }
+
+  function flushPendingFinaleReveals() {
+    while (finaleRevealTimers.length) {
+      const item = finaleRevealTimers.shift();
+      clearTimeout(item.tid);
+      global.FamiliadaState.finaleRevealPoints(item.player, item.row);
+    }
+  }
+
+  function triggerFinaleChoice(variantIdx) {
+    const state = global.FamiliadaState;
+    const audio = global.FamiliadaAudio;
+    const res = state.finaleSelectVariant(variantIdx);
+    if (res.action === 'blocked') {
+      audio.play('duplicate');
+      return;
+    }
+    if (res.action !== 'selected') return;
+
+    audio.play('flip');
+
+    for (let i = finaleRevealTimers.length - 1; i >= 0; i--) {
+      if (finaleRevealTimers[i].player === res.player && finaleRevealTimers[i].row === res.row) {
+        clearTimeout(finaleRevealTimers[i].tid);
+        finaleRevealTimers.splice(i, 1);
+      }
+    }
+
+    const entry = { player: res.player, row: res.row, tid: null };
+    entry.tid = setTimeout(function () {
+      const idx = finaleRevealTimers.indexOf(entry);
+      if (idx !== -1) finaleRevealTimers.splice(idx, 1);
+      const rev = state.finaleRevealPoints(entry.player, entry.row);
+      if (rev.revealed) {
+        audio.play(rev.points > 0 ? 'correct' : 'zero');
+        if (rev.wonNow) {
+          setTimeout(function () { audio.play('finaleWin'); }, 280);
+        }
+      }
+    }, 320);
+    finaleRevealTimers.push(entry);
   }
 
   function isHelpOpen() {
@@ -274,7 +323,7 @@
       }
       if (e.key.length === 1 && (!e.ctrlKey || e.altKey) && !e.metaKey) {
         e.preventDefault();
-        if (finale.typingBuffer.length < 28) {
+        if (finale.typingBuffer.length < 40) {
           finale.typingBuffer += e.key;
           global.FamiliadaBoardRenderer.markDirty('finale');
         }
@@ -314,6 +363,36 @@
     }
 
     const key = e.key.toLowerCase();
+    const digit = getDigitKeyNumber(e);
+    if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (digit !== null && digit >= 1 && digit <= 5) {
+        e.preventDefault();
+        if (e.shiftKey) state.finaleHideRow(digit - 1);
+        else state.finaleSelectRow(digit - 1);
+        return;
+      }
+      if (e.key === '0' || e.code === 'Digit0' || e.code === 'Numpad0' || key === 'a') {
+        e.preventDefault();
+        triggerFinaleChoice('none');
+        return;
+      }
+      if (key === 'q') {
+        e.preventDefault();
+        triggerFinaleChoice(0);
+        return;
+      }
+      if (key === 'w') {
+        e.preventDefault();
+        triggerFinaleChoice(1);
+        return;
+      }
+      if (key === 'e') {
+        e.preventDefault();
+        triggerFinaleChoice(2);
+        return;
+      }
+    }
+
     if (e.key === 'ArrowUp') {
       e.preventDefault();
       state.finaleMove(-1, 0);
@@ -322,14 +401,18 @@
       state.finaleMove(1, 0);
     } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
-      state.finaleMove(0, -1);
+      flushPendingFinaleReveals();
+      state.finaleSwitchPlayer(0);
     } else if (e.key === 'ArrowRight') {
       e.preventDefault();
-      state.finaleMove(0, 1);
+      flushPendingFinaleReveals();
+      state.finaleSwitchPlayer(1);
     } else if (e.key === 'Enter') {
       e.preventDefault();
       const res = state.finaleHandleEnter();
-      if (res.action === 'revealed') {
+      if (res.action === 'textRevealed') {
+        audio.play('flip');
+      } else if (res.action === 'pointsRevealed' || res.action === 'revealed') {
         audio.play(res.points > 0 ? 'correct' : 'zero');
         if (res.wonNow) {
           setTimeout(function () { audio.play('finaleWin'); }, 280);
@@ -344,8 +427,12 @@
       if (running) lastFinaleTick = performance.now();
     } else if (key === 'r') {
       e.preventDefault();
-      if (e.shiftKey) state.resetFinaleBoard();
-      else state.finaleResetTimer();
+      if (e.shiftKey) {
+        clearPendingFinaleReveals();
+        state.resetFinaleBoard();
+      } else {
+        state.finaleResetTimer();
+      }
     } else if (key === 'd' || key === 'x') {
       e.preventDefault();
       state.finaleTriggerDuplicate();
@@ -358,6 +445,7 @@
       state.finaleClearActiveRow();
     } else if (key === 'b' || e.key === 'PageUp') {
       e.preventDefault();
+      flushPendingFinaleReveals();
       goPrevStageWithTransition();
     }
   }

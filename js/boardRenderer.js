@@ -1,8 +1,8 @@
 (function (global) {
   'use strict';
 
-  const COLS = 208;
-  const ROWS = 80;
+  const COLS = 238;
+  const ROWS = 88;
 
   const VALUE_OFF = 0;
   const VALUE_YELLOW = 1;
@@ -93,11 +93,78 @@
     return cursorX - adv.spacing;
   }
 
-  function clampText(str, maxChars) {
+  function getCompactGlyphBox(ch) {
+    if (ch === ' ') return { minC: 0, width: 2, isSpace: true, glyph: null };
+    const glyph = global.FamiliadaFont.getGlyph(ch, 'condensed');
+    let minC = 4;
+    let maxC = -1;
+    for (let r = 0; r < glyph.length; r++) {
+      for (let c = 0; c < glyph[r].length; c++) {
+        if (glyph[r][c] === '#') {
+          if (c < minC) minC = c;
+          if (c > maxC) maxC = c;
+        }
+      }
+    }
+    if (maxC < minC) return { minC: 0, width: 2, isSpace: true, glyph: null };
+    return { minC: minC, width: maxC - minC + 1, isSpace: false, glyph: glyph };
+  }
+
+  function measureCompactText(str) {
     const text = String(str || '');
-    if (text.length <= maxChars) return text;
-    if (maxChars <= 2) return text.slice(0, maxChars);
-    return text.slice(0, maxChars - 2) + '..';
+    if (!text.length) return 0;
+    let w = 0;
+    for (let i = 0; i < text.length; i++) {
+      const box = getCompactGlyphBox(text[i]);
+      w += box.width;
+      if (i < text.length - 1) {
+        w += (box.isSpace || text[i + 1] === ' ') ? 0 : 1;
+      }
+    }
+    return w;
+  }
+
+  function drawCompactText(x, y, str, val) {
+    const text = String(str || '');
+    let cursorX = x;
+    for (let i = 0; i < text.length; i++) {
+      const box = getCompactGlyphBox(text[i]);
+      if (!box.isSpace && box.glyph) {
+        for (let r = 0; r < box.glyph.length; r++) {
+          const line = box.glyph[r];
+          for (let c = box.minC; c < box.minC + box.width; c++) {
+            if (line[c] === '#') {
+              setDot(cursorX + (c - box.minC), y + r, val);
+            }
+          }
+        }
+      }
+      cursorX += box.width;
+      if (i < text.length - 1) {
+        cursorX += (box.isSpace || text[i + 1] === ' ') ? 0 : 1;
+      }
+    }
+    return cursorX;
+  }
+
+  function drawFittedText(x, y, maxW, str, val) {
+    const font = global.FamiliadaFont;
+    const text = String(str || '');
+    if (!text) return x;
+    if (font.measureText(text, 'standard') <= maxW) {
+      return drawText(x, y, text, 'standard', val);
+    }
+    if (font.measureText(text, 'condensed') <= maxW) {
+      return drawText(x, y, text, 'condensed', val);
+    }
+    if (measureCompactText(text) <= maxW) {
+      return drawCompactText(x, y, text, val);
+    }
+    let clipped = text;
+    while (clipped.length > 2 && measureCompactText(clipped + '..') > maxW) {
+      clipped = clipped.slice(0, -1).trimEnd();
+    }
+    return drawCompactText(x, y, clipped + '..', val);
   }
 
   function buildRoundGrid(data, game, round) {
@@ -106,19 +173,19 @@
 
     // Lewe znaki X (z fontu familiada-10)
     if (game.leftBigX) {
-      drawBitmap(6, 16, font.BIG_X, xVal);
+      drawBitmap(6, 20, font.BIG_X, xVal);
     } else {
       for (let s = 0; s < game.leftStrikes; s++) {
-        drawBitmap(7, 5 + s * 24, font.SMALL_X, xVal);
+        drawBitmap(7, 6 + s * 26, font.SMALL_X, xVal);
       }
     }
 
     // Prawe znaki X (z fontu familiada-10)
     if (game.rightBigX) {
-      drawBitmap(185, 16, font.BIG_X, xVal);
+      drawBitmap(215, 20, font.BIG_X, xVal);
     } else {
       for (let s = 0; s < game.rightStrikes; s++) {
-        drawBitmap(186, 5 + s * 24, font.SMALL_X, xVal);
+        drawBitmap(216, 6 + s * 26, font.SMALL_X, xVal);
       }
     }
 
@@ -126,146 +193,115 @@
     const answers = round ? round.answers : [];
     const count = Math.min(8, answers.length);
     let y0 = 6;
-    let step = 10;
+    let step = 11;
     if (count <= 5) {
-      y0 = 8;
-      step = 11;
+      y0 = 9;
+      step = 12;
     } else if (count === 7) {
       y0 = 4;
-      step = 9;
+      step = 10;
     } else if (count >= 8) {
-      y0 = 2;
-      step = 8;
+      y0 = 3;
+      step = 9;
     }
 
     for (let i = 0; i < count; i++) {
       const ry = y0 + i * step;
-      drawText(32, ry, String(i + 1), 'standard', VALUE_YELLOW);
+      drawText(27, ry, String(i + 1), 'standard', VALUE_YELLOW);
 
       if (game.revealed[i]) {
         const rawText = font.toBoardUpper(answers[i].text);
-        const variant = rawText.length > 19 ? 'condensed' : 'standard';
-        const maxChars = variant === 'condensed' ? 23 : 19;
-        const displayStr = clampText(rawText, maxChars);
-        drawText(41, ry, displayStr, variant, VALUE_YELLOW);
-
         const ptsStr = String(answers[i].points);
         const ptsW = font.measureText(ptsStr, 'standard');
-        drawText(176 - ptsW, ry, ptsStr, 'standard', VALUE_YELLOW);
+        const ptsX = 208 - ptsW;
+        const maxTextW = Math.max(40, ptsX - 4 - 36);
+
+        drawFittedText(36, ry, maxTextW, rawText, VALUE_YELLOW);
+        drawText(ptsX, ry, ptsStr, 'standard', VALUE_YELLOW);
       } else {
-        drawDottedLineH(41, 151, ry + 5, 3, VALUE_YELLOW);
-        drawText(165, ry, '--', 'standard', VALUE_YELLOW);
+        drawDottedLineH(36, 185, ry + 5, 3, VALUE_YELLOW);
+        drawText(197, ry, '--', 'standard', VALUE_YELLOW);
       }
     }
 
     // Prawy dolny róg: opcjonalny mnożnik + SUMA + bieżąca suma rundy
     const mult = round ? (round.multiplier || 1) : 1;
     if (mult > 1) {
-      drawText(100, 68, 'X' + mult, 'standard', VALUE_YELLOW);
+      drawText(128, 75, 'X' + mult, 'standard', VALUE_YELLOW);
     }
-    drawText(120, 68, 'SUMA', 'standard', VALUE_YELLOW);
+    drawText(148, 75, 'SUMA', 'standard', VALUE_YELLOW);
 
     const sumStr = String(game.roundSum || 0);
     const sumW = font.measureText(sumStr, 'standard');
-    drawText(176 - sumW, 68, sumStr, 'standard', VALUE_YELLOW);
+    drawText(208 - sumW, 75, sumStr, 'standard', VALUE_YELLOW);
   }
 
   function buildFinaleGrid(data, finale, totalScore, now) {
     const font = global.FamiliadaFont;
-    const rowYs = [6, 18, 30, 42, 54];
+    const rowYs = [7, 20, 33, 46, 59];
     const blinkOn = Math.floor(now / 420) % 2 === 0;
-
-    drawDottedLineV(103, 5, 62, 2, VALUE_YELLOW);
 
     for (let p = 0; p < 2; p++) {
       const colData = p === 0 ? finale.p1 : finale.p2;
-      const xStart = p === 0 ? 6 : 108;
-      const xPtsRight = p === 0 ? 99 : 201;
-      const xTextMaxRight = p === 0 ? 78 : 180;
-      const xDotIndicator = p === 0 ? 101 : 105;
+      const xStart = p === 0 ? 7 : 127;
+      const xPtsRight = p === 0 ? 113 : 233;
+      const xTextMaxW = 91;
+      const dotX = p === 0 ? 2 : 122;
 
       for (let row = 0; row < 5; row++) {
         const ry = rowYs[row];
         const slot = colData[row];
         const isActive = finale.activePlayer === p && finale.activeRow === row;
 
+        if (isActive) {
+          fillRect(dotX, ry + 3, dotX + 1, ry + 4, VALUE_YELLOW);
+        }
+
         if (p === 0 && finale.maskPlayer1) {
-          drawDottedLineH(xStart, xTextMaxRight, ry + 5, 3, VALUE_YELLOW);
+          drawDottedLineH(xStart, xStart + xTextMaxW - 2, ry + 5, 3, VALUE_YELLOW);
           drawText(xPtsRight - 11, ry, '--', 'standard', VALUE_YELLOW);
           continue;
         }
 
-        if (isActive && finale.typingMode) {
-          const raw = finale.typingBuffer || '';
-          const eqIdx = raw.indexOf('=');
-          const visibleRaw = eqIdx === -1 ? raw : raw.slice(0, eqIdx);
-          const hasHiddenPts = eqIdx !== -1;
-          let upper = font.toBoardUpper(visibleRaw);
-          const variant = upper.length > 11 ? 'condensed' : 'standard';
-          const maxTypingChars = variant === 'condensed' ? 13 : 11;
-          if (upper.length > maxTypingChars) {
-            upper = upper.slice(upper.length - maxTypingChars);
-          }
-
-          let afterX = xStart;
-          if (upper.length) {
-            afterX = drawText(xStart, ry, upper, variant, VALUE_YELLOW) + 2;
-          }
-          if (blinkOn) {
-            fillRect(afterX, ry + 1, Math.min(afterX + 3, xTextMaxRight), ry + 7, VALUE_YELLOW);
-          }
-          if (hasHiddenPts) {
-            setDot(xDotIndicator, ry + 4, VALUE_YELLOW);
-          }
-          drawText(xPtsRight - 11, ry, '--', 'standard', VALUE_YELLOW);
+        if (slot.textRevealed && slot.text) {
+          const upper = font.toBoardUpper(slot.text);
+          drawFittedText(xStart, ry, xTextMaxW, upper, VALUE_YELLOW);
         } else {
-          if (slot.text) {
-            const upper = font.toBoardUpper(slot.text);
-            const variant = upper.length > 12 ? 'condensed' : 'standard';
-            const maxChars = variant === 'condensed' ? 14 : 12;
-            const displayStr = clampText(upper, maxChars);
-            drawText(xStart, ry, displayStr, variant, VALUE_YELLOW);
-          } else {
-            drawDottedLineH(xStart, xTextMaxRight - 4, ry + 5, 3, VALUE_YELLOW);
-          }
-
-          if (slot.pointsRevealed) {
-            const ptsStr = slot.points === 0 ? '--' : String(slot.points);
-            const ptsW = font.measureText(ptsStr, 'standard');
-            drawText(xPtsRight - ptsW, ry, ptsStr, 'standard', VALUE_YELLOW);
-          } else {
-            drawText(xPtsRight - 11, ry, '--', 'standard', VALUE_YELLOW);
-            if (slot.customPoints !== null && slot.text) {
-              setDot(xDotIndicator, ry + 4, VALUE_YELLOW);
-            }
-          }
+          drawDottedLineH(xStart, xStart + xTextMaxW - 4, ry + 5, 3, VALUE_YELLOW);
         }
 
-        if (isActive && !finale.typingMode && blinkOn) {
-          drawDottedLineH(xStart, xPtsRight - 1, ry + 9, 2, VALUE_YELLOW);
+        if (slot.textRevealed && slot.pointsRevealed) {
+          const ptsStr = String(slot.points != null ? slot.points : 0);
+          const ptsW = font.measureText(ptsStr, 'standard');
+          drawText(xPtsRight - ptsW, ry, ptsStr, 'standard', VALUE_YELLOW);
+        } else {
+          drawText(xPtsRight - 11, ry, '--', 'standard', VALUE_YELLOW);
         }
       }
     }
 
     if (finale.pointsInputMode && blinkOn) {
-      setDot(103, 66, VALUE_YELLOW);
+      setDot(118, 72, VALUE_YELLOW);
     }
 
     if (Date.now() < finale.duplicateFlashUntil) {
       const xVal = data.settings.xColor === 'red' ? VALUE_RED : VALUE_YELLOW;
-      fillRect(94, 21, 112, 45, VALUE_OFF);
-      drawBitmap(96, 23, font.SMALL_X, xVal);
+      fillRect(109, 24, 127, 48, VALUE_OFF);
+      drawBitmap(111, 26, font.SMALL_X, xVal);
     }
 
-    // Suma finałowa w prawym dolnym rogu
+    // Suma finałowa w prawym dolnym rogu (zawsze widoczna; przy wygranej migająca obwódka)
     const target = Number(data.settings.finaleTarget) || 200;
     const won = totalScore >= target;
-    const showTotal = !won || Math.floor(now / 320) % 2 === 0;
-    drawText(142, 68, 'SUMA', 'standard', VALUE_YELLOW);
-    if (showTotal) {
-      const totalStr = String(totalScore);
-      const totalW = font.measureText(totalStr, 'standard');
-      drawText(201 - totalW, 68, totalStr, 'standard', VALUE_YELLOW);
+    drawText(172, 75, 'SUMA', 'standard', VALUE_YELLOW);
+    const totalStr = String(totalScore);
+    const totalW = font.measureText(totalStr, 'standard');
+    drawText(232 - totalW, 75, totalStr, 'standard', VALUE_YELLOW);
+    if (won && Math.floor(now / 320) % 2 === 0) {
+      drawDottedLineH(168, 234, 73, 2, VALUE_YELLOW);
+      drawDottedLineH(168, 234, 85, 2, VALUE_YELLOW);
+      drawDottedLineV(168, 73, 85, 2, VALUE_YELLOW);
+      drawDottedLineV(234, 73, 85, 2, VALUE_YELLOW);
     }
   }
 
@@ -276,7 +312,6 @@
     bgCanvas.height = canvas.height;
     const bctx = bgCanvas.getContext('2d');
 
-    // Głęboka czerń studyjna z delikatnymi kolumnami bokeh jak na zdjęciu
     bctx.fillStyle = '#030305';
     bctx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
 
@@ -298,8 +333,7 @@
       }
     }
 
-    // Kropki niemal stykające się jak w familiada-10
-    const r = Math.max(1.3, pitch * 0.46);
+    const r = Math.max(1.2, pitch * 0.46);
     const size = Math.ceil(pitch * 1.6);
     const half = size / 2;
 
@@ -403,7 +437,6 @@
     }
 
     const font = global.FamiliadaFont;
-    // W górnych okienkach używamy rdzenia 5x7 (wiersze 1..7) dużymi stykającymi się kropkami
     const charW = 5;
     const charH = 7;
     const spacing = 2;
@@ -492,11 +525,9 @@
   function renderCustomTtfBoard(data, game, round, finale, totalScore, customFont, now) {
     ctx.drawImage(bgCanvas, 0, 0);
     const font = global.FamiliadaFont;
-    const w = canvas.width;
-    const h = canvas.height;
-    const dotSize = w / COLS;
+    const dotSize = canvas.width / COLS;
 
-    function drawTtfText(tx, ty, str, sizePx, align, color) {
+    function drawTtfText(tx, ty, str, sizePx, align, color, maxPxW) {
       ctx.save();
       ctx.font = sizePx + 'px "' + customFont + '", monospace';
       ctx.fillStyle = color || '#ffe94d';
@@ -504,7 +535,8 @@
       ctx.shadowBlur = Math.max(3, dotSize * 0.7);
       ctx.textAlign = align || 'left';
       ctx.textBaseline = 'top';
-      ctx.fillText(str, tx, ty);
+      if (maxPxW) ctx.fillText(str, tx, ty, maxPxW);
+      else ctx.fillText(str, tx, ty);
       ctx.restore();
     }
 
@@ -523,69 +555,75 @@
         }
       }
 
-      if (game.leftBigX) stampBitmap(6, 16, font.BIG_X);
-      else for (let s = 0; s < game.leftStrikes; s++) stampBitmap(7, 5 + s * 24, font.SMALL_X);
+      if (game.leftBigX) stampBitmap(6, 20, font.BIG_X);
+      else for (let s = 0; s < game.leftStrikes; s++) stampBitmap(7, 6 + s * 26, font.SMALL_X);
 
-      if (game.rightBigX) stampBitmap(185, 16, font.BIG_X);
-      else for (let s = 0; s < game.rightStrikes; s++) stampBitmap(186, 5 + s * 24, font.SMALL_X);
+      if (game.rightBigX) stampBitmap(215, 20, font.BIG_X);
+      else for (let s = 0; s < game.rightStrikes; s++) stampBitmap(216, 6 + s * 26, font.SMALL_X);
 
       const answers = round ? round.answers : [];
       const count = Math.min(8, answers.length);
-      const step = count <= 5 ? 11 : (count === 6 ? 10 : (count === 7 ? 9 : 8));
-      const y0 = count <= 5 ? 8 : (count === 6 ? 6 : (count === 7 ? 4 : 2));
-      const fontSize = Math.round(pitch * 7.5);
+      const step = count <= 5 ? 12 : (count === 6 ? 11 : (count === 7 ? 10 : 9));
+      const y0 = count <= 5 ? 9 : (count === 6 ? 6 : (count === 7 ? 4 : 3));
+      const fontSize = Math.round(pitch * 7.8);
 
       for (let i = 0; i < count; i++) {
         const ry = (y0 + i * step) * pitch;
-        drawTtfText(32 * pitch, ry, String(i + 1), fontSize, 'left');
+        drawTtfText(28 * pitch, ry, String(i + 1), fontSize, 'left');
         if (game.revealed[i]) {
-          drawTtfText(41 * pitch, ry, font.toBoardUpper(answers[i].text), fontSize, 'left');
-          drawTtfText(176 * pitch, ry, String(answers[i].points), fontSize, 'right');
+          drawTtfText(36 * pitch, ry, font.toBoardUpper(answers[i].text), fontSize, 'left', '#ffe94d', 156 * pitch);
+          drawTtfText(208 * pitch, ry, String(answers[i].points), fontSize, 'right');
         } else {
-          drawTtfText(41 * pitch, ry, '------------', fontSize, 'left');
-          drawTtfText(176 * pitch, ry, '--', fontSize, 'right');
+          drawTtfText(36 * pitch, ry, '------------', fontSize, 'left');
+          drawTtfText(208 * pitch, ry, '--', fontSize, 'right');
         }
       }
 
       const mult = round ? (round.multiplier || 1) : 1;
-      if (mult > 1) drawTtfText(100 * pitch, 68 * pitch, 'X' + mult, fontSize, 'left');
-      drawTtfText(120 * pitch, 68 * pitch, 'SUMA', fontSize, 'left');
-      drawTtfText(176 * pitch, 68 * pitch, String(game.roundSum || 0), fontSize, 'right');
+      if (mult > 1) drawTtfText(128 * pitch, 75 * pitch, 'X' + mult, fontSize, 'left');
+      drawTtfText(148 * pitch, 75 * pitch, 'SUMA', fontSize, 'left');
+      drawTtfText(208 * pitch, 75 * pitch, String(game.roundSum || 0), fontSize, 'right');
     } else if (game.mode === 'finale') {
-      const rowYs = [6, 18, 30, 42, 54];
-      const fontSize = Math.round(pitch * 7.2);
-      const blinkOn = Math.floor(now / 420) % 2 === 0;
+      const rowYs = [7, 20, 33, 46, 59];
+      const fontSize = Math.round(pitch * 7.4);
       for (let p = 0; p < 2; p++) {
         const colData = p === 0 ? finale.p1 : finale.p2;
-        const xStart = (p === 0 ? 6 : 108) * pitch;
-        const xPts = (p === 0 ? 99 : 201) * pitch;
+        const xStart = (p === 0 ? 7 : 127) * pitch;
+        const xPts = (p === 0 ? 113 : 233) * pitch;
+        const dotPx = (p === 0 ? 2 : 122) * pitch;
         for (let row = 0; row < 5; row++) {
           const ry = rowYs[row] * pitch;
           const slot = colData[row];
           const isActive = finale.activePlayer === p && finale.activeRow === row;
+          if (isActive) {
+            ctx.fillStyle = '#ffe94d';
+            ctx.fillRect(dotPx, ry + 3 * pitch, Math.max(3, 2 * pitch), Math.max(3, 2 * pitch));
+          }
           if (p === 0 && finale.maskPlayer1) {
             drawTtfText(xStart, ry, '---------', fontSize, 'left');
             drawTtfText(xPts, ry, '--', fontSize, 'right');
             continue;
           }
-          if (isActive && finale.typingMode) {
-            const raw = finale.typingBuffer || '';
-            const eqIdx = raw.indexOf('=');
-            const vis = eqIdx === -1 ? raw : raw.slice(0, eqIdx);
-            drawTtfText(xStart, ry, font.toBoardUpper(vis) + (blinkOn ? '_' : ''), fontSize, 'left');
-            drawTtfText(xPts, ry, '--', fontSize, 'right');
-          } else {
-            drawTtfText(xStart, ry, slot.text ? font.toBoardUpper(slot.text) : '---------', fontSize, 'left');
-            drawTtfText(xPts, ry, slot.pointsRevealed ? (slot.points === 0 ? '--' : String(slot.points)) : '--', fontSize, 'right');
-          }
-          if (isActive && !finale.typingMode && blinkOn) {
-            ctx.fillStyle = '#ffe94d';
-            ctx.fillRect(xStart, ry + 8.5 * pitch, xPts - xStart, Math.max(2, pitch * 0.4));
-          }
+          drawTtfText(
+            xStart,
+            ry,
+            (slot.textRevealed && slot.text) ? font.toBoardUpper(slot.text) : '---------',
+            fontSize,
+            'left',
+            '#ffe94d',
+            91 * pitch
+          );
+          drawTtfText(
+            xPts,
+            ry,
+            (slot.textRevealed && slot.pointsRevealed) ? String(slot.points != null ? slot.points : 0) : '--',
+            fontSize,
+            'right'
+          );
         }
       }
-      drawTtfText(142 * pitch, 68 * pitch, 'SUMA', fontSize, 'left');
-      drawTtfText(201 * pitch, 68 * pitch, String(totalScore), fontSize, 'right');
+      drawTtfText(172 * pitch, 75 * pitch, 'SUMA', fontSize, 'left');
+      drawTtfText(232 * pitch, 75 * pitch, String(totalScore), fontSize, 'right');
     }
   }
 

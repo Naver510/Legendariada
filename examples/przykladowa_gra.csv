@@ -1,47 +1,36 @@
 etap;mnoznik;pytanie;odpowiedz;punkty;synonimy
-Runda 1;1;Co znajduje się w warsztacie konstruktora?;ŚRUBOKRĘT;32;
-Runda 1;1;Co znajduje się w warsztacie konstruktora?;LUTOWNICA;24;
-Runda 1;1;Co znajduje się w warsztacie konstruktora?;MULTIMETR;18;
-Runda 1;1;Co znajduje się w warsztacie konstruktora?;KLUCZ PŁASKI;12;
-Runda 1;1;Co znajduje się w warsztacie konstruktora?;DRUKARKA 3D;8;
-Runda 1;1;Co znajduje się w warsztacie konstruktora?;TAŚMA IZOLACYJNA;6;
-Runda 2;1;Popularny napój pity przez studentów w nocy?;KAWA;45;
-Runda 2;1;Popularny napój pity przez studentów w nocy?;ENERGETYK;26;
-Runda 2;1;Popularny napój pity przez studentów w nocy?;HERBATA;14;
-Runda 2;1;Popularny napój pity przez studentów w nocy?;COLA;9;
-Runda 2;1;Popularny napój pity przez studentów w nocy?;WODA;6;
-Runda 3 (x2);2;Czego lepiej nie zapomnieć na zawody robotyczne?;AKUMULATOR;38;
-Runda 3 (x2);2;Czego lepiej nie zapomnieć na zawody robotyczne?;LAPTOP;27;
-Runda 3 (x2);2;Czego lepiej nie zapomnieć na zawody robotyczne?;ŁADOWARKA;16;
-Runda 3 (x2);2;Czego lepiej nie zapomnieć na zawody robotyczne?;CZĘŚCI ZAPASOWE;11;
-Runda 3 (x2);2;Czego lepiej nie zapomnieć na zawody robotyczne?;DOKUMENTACJA;8;
-Runda 4 (x3);3;Wymień miasto uniwersyteckie w Polsce.;WARSZAWA;33;
-Runda 4 (x3);3;Wymień miasto uniwersyteckie w Polsce.;KRAKÓW;28;
-Runda 4 (x3);3;Wymień miasto uniwersyteckie w Polsce.;WROCŁAW;18;
-Runda 4 (x3);3;Wymień miasto uniwersyteckie w Polsce.;RZESZÓW;12;
-Runda 4 (x3);3;Wymień miasto uniwersyteckie w Polsce.;GDAŃSK;9;
-Finał 1;1;Wymień planetę Układu Słonecznego.;MARS;44;
-Finał 1;1;Wymień planetę Układu Słonecznego.;ZIEMIA;26;
-Finał 1;1;Wymień planetę Układu Słonecznego.;JOWISZ;14;
-Finał 1;1;Wymień planetę Układu Słonecznego.;SATURN;9;
-Finał 1;1;Wymień planetę Układu Słonecznego.;WENUS;5;
-Finał 2;1;Podaj język programowania.;PYTHON;46;
-Finał 2;1;Podaj język programowania.;C++;24;CPP, C
-Finał 2;1;Podaj język programowania.;JAVA;15;
-Finał 2;1;Podaj język programowania.;JAVASCRIPT;10;JS
-Finał 2;1;Podaj język programowania.;RUST;5;
-Finał 3;1;Co może popsuć się tuż przed prezentacją?;ZASILANIE;37;BATERIA, PRĄD
-Finał 3;1;Co może popsuć się tuż przed prezentacją?;INTERNET;29;WIFI, SIEĆ
-Finał 3;1;Co może popsuć się tuż przed prezentacją?;PROJEKTOR;18;KABEL, HDMI
-Finał 3;1;Co może popsuć się tuż przed prezentacją?;KOD;10;PROGRAM, SYSTEM
-Finał 3;1;Co może popsuć się tuż przed prezentacją?;MIKROFON;6;DŹWIĘK
-Finał 4;1;Ulubione danie na szybką przekąskę.;PIZZA;48;
-Finał 4;1;Ulubione danie na szybką przekąskę.;KEBAB;23;
-Finał 4;1;Ulubione danie na szybką przekąskę.;BURGER;15;HAMBURGER
-Finał 4;1;Ulubione danie na szybką przekąskę.;KANAPKA;9;TOST, ZAPIEKANKA
-Finał 4;1;Ulubione danie na szybką przekąskę.;FRYTKI;5;
-Finał 5;1;Kto często ratuje projekt na ostatnią chwilę?;PROGRAMISTA;38;INFORMATYK
-Finał 5;1;Kto często ratuje projekt na ostatnią chwilę?;ELEKTRONIK;25;
-Finał 5;1;Kto często ratuje projekt na ostatnią chwilę?;MECHANIK;19;
-Finał 5;1;Kto często ratuje projekt na ostatnią chwilę?;KOORDYNATOR;11;LIDER, KAPITAN
-Finał 5;1;Kto często ratuje projekt na ostatnią chwilę?;KOLEGA;7;PRZYJACIEL, ZESPÓŁ
+Runda 1;1;Czym przeciętnemu człowiekowi kojarzy się Mars?;Z BATONIKAMI;45;
+Runda 1;1;Czym przeciętnemu człowiekowi kojarzy się Mars?;Z CZERWONĄ PLANETĄ;35;
+Runda 1;1;Czym przeciętnemu człowiekowi kojarzy się Mars?;Z ELONEM MUSKIEM / SPACEX;25;
+Runda 1;1;Czym przeciętnemu człowiekowi kojarzy się Mars?;Z KOSMITAMI (MARSJANAMI);15;
+Runda 1;1;Czym przeciętnemu człowiekowi kojarzy się Mars?;Z ŁAZIKAMI;5;
+Runda 2 (x2);2;Wymówka, dlaczego nie przyszedłeś/aś na wykład o 8:00 rano:;SIEDZIAŁEM W WARSZTACIE DO 4;45;
+Runda 2 (x2);2;Wymówka, dlaczego nie przyszedłeś/aś na wykład o 8:00 rano:;ZASPAŁEM;35;
+Runda 2 (x2);2;Wymówka, dlaczego nie przyszedłeś/aś na wykład o 8:00 rano:;BUDZIK NIE ZADZWONIŁ;25;
+Runda 2 (x2);2;Wymówka, dlaczego nie przyszedłeś/aś na wykład o 8:00 rano:;LUTOWAŁEM PŁYTKĘ;15;
+Runda 2 (x2);2;Wymówka, dlaczego nie przyszedłeś/aś na wykład o 8:00 rano:;KORKI NA MIEŚCIE;5;
+Runda 3 (x3);3;Czego zawsze brakuje w warsztacie na dzień przed zawodami?;SNU;45;
+Runda 3 (x3);3;Czego zawsze brakuje w warsztacie na dzień przed zawodami?;ŚRUBEK;35;
+Runda 3 (x3);3;Czego zawsze brakuje w warsztacie na dzień przed zawodami?;TRYTYTEK;25;
+Runda 3 (x3);3;Czego zawsze brakuje w warsztacie na dzień przed zawodami?;KAWY;15;
+Runda 3 (x3);3;Czego zawsze brakuje w warsztacie na dzień przed zawodami?;PIENIĘDZY W BUDŻECIE;5;
+Finał 1;1;Coś srebrnego;SREBRO;45;SREBRNY, SREBRNA
+Finał 1;1;Coś srebrnego;ALUMINIUM;25;ALU, FOLIA ALUMINIOWA
+Finał 1;1;Coś srebrnego;ŚRUBKI;10;ŚRUBA, ŚRUBKA, ŚRUBY
+Finał 1;1;Coś srebrnego;BRAK ODPOWIEDZI;0;BRAK, PAS, DALEJ, -
+Finał 2;1;Ulubione jedzenie studenta;KEBAB;45;KEBS, KEBABA
+Finał 2;1;Ulubione jedzenie studenta;ZAPIEKANKA;25;ZAPIEKS, ZAPIEKANKI
+Finał 2;1;Ulubione jedzenie studenta;SŁOIKI;10;SŁOIK, OD MAMY
+Finał 2;1;Ulubione jedzenie studenta;BRAK ODPOWIEDZI;0;BRAK, PAS, DALEJ, -
+Finał 3;1;Wymień miasto na Podkarpaciu;RZESZÓW;45;RZESZOW
+Finał 3;1;Wymień miasto na Podkarpaciu;STALOWA WOLA;25;STALOWA
+Finał 3;1;Wymień miasto na Podkarpaciu;PRZEMYŚL;10;PRZEMYSL
+Finał 3;1;Wymień miasto na Podkarpaciu;BRAK ODPOWIEDZI;0;BRAK, PAS, DALEJ, -
+Finał 4;1;Znany astronauta;ARMSTRONG;45;NEIL ARMSTRONG, NEIL
+Finał 4;1;Znany astronauta;BUZZ ALDRIN;25;ALDRIN, BUZZ
+Finał 4;1;Znany astronauta;SŁAWOSZ UZNAŃSKI-WIŚNIEWSKI;10;SŁAWOSZ, UZNAŃSKI, WIŚNIEWSKI, SŁAWOSZ UZNAŃSKI, UZNAŃSKI WIŚNIEWSKI
+Finał 4;1;Znany astronauta;BRAK ODPOWIEDZI;0;BRAK, PAS, DALEJ, -
+Finał 5;1;Więcej niż jedno zwierzę;LAMA;45;LAMY
+Finał 5;1;Więcej niż jedno zwierzę;WATAHA;25;WATAHY
+Finał 5;1;Więcej niż jedno zwierzę;STADO;10;STADA
+Finał 5;1;Więcej niż jedno zwierzę;BRAK ODPOWIEDZI;0;BRAK, PAS, DALEJ, -
