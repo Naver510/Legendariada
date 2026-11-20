@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Legendariada — Tablica Familiady</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="mode-title">
+  <!-- Główna scena gry (oprawa studyjna TVP / Legendariada) -->
+  <main id="stage" aria-label="Tablica teleturnieju Legendariada">
+    <div id="studio-shell">
+      <!-- Górna belka z wynikami drużyn i pulą rundy / stoperem finału -->
+      <header id="studio-top">
+        <div class="neon-line neon-line-1" aria-hidden="true"></div>
+        <div class="neon-line neon-line-2" aria-hidden="true"></div>
+
+        <div id="score-left-box" class="score-box score-box-side score-box-left" aria-label="Punkty lewej drużyny">
+          <canvas id="score-left-canvas"></canvas>
+        </div>
+
+        <div id="score-center-box" class="score-box score-box-center" aria-label="Pula rundy lub czas finału">
+          <canvas id="score-center-canvas"></canvas>
+        </div>
+
+        <div id="score-right-box" class="score-box score-box-side score-box-right" aria-label="Punkty prawej drużyny">
+          <canvas id="score-right-canvas"></canvas>
+        </div>
+      </header>
+
+      <!-- Dolna główna tablica z odpowiedziami i znakami X -->
+      <div id="board-bezel">
+        <canvas id="board-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- Ekran powitalny z logo Legendariada -->
+    <div id="title-overlay">
+      <div class="title-logo-card">
+        <img src="assets/legendariada-logo.png" alt="Legendariada" class="title-logo-img">
+      </div>
+    </div>
+
+    <!-- Płynna kurtyna przejścia między etapami -->
+    <div id="stage-transition" aria-hidden="true">
+      <div class="transition-card">
+        <div class="transition-logo-wrap">
+          <img src="assets/legendariada-logo.png" alt="" class="transition-logo-img">
+        </div>
+        <div id="transition-label" class="transition-label">RUNDA 1</div>
+      </div>
+    </div>
+
+    <!-- Subtelny pasek widoczny WYŁĄCZNIE na ekranie powitalnym -->
+    <div id="title-controls" aria-hidden="false">
+      <span><kbd>SPACJA</kbd> / <kbd>ENTER</kbd> Start gry</span>
+      <span><kbd>F</kbd> Pełny ekran</span>
+      <span><kbd>F2</kbd> Edytor / Import</span>
+      <span><kbd>H</kbd> Skróty</span>
+    </div>
+  </main>
+
+  <!-- Dyskretna ściągawka skrótów (H) - nigdy nie pokazuje odpowiedzi -->
+  <div id="help-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <div class="modal-card modal-card-narrow">
+      <header class="modal-header">
+        <h2 id="help-title">Skróty klawiszowe prowadzącego</h2>
+        <button type="button" class="btn-icon" data-close-help title="Zamknij (H / Esc)">&times;</button>
+      </header>
+      <div class="modal-body help-grid">
+        <section>
+          <h3>Ogólne</h3>
+          <dl class="key-list">
+            <div><dt><kbd>F</kbd></dt><dd>Tryb pełnoekranowy (Fullscreen)</dd></div>
+            <div><dt><kbd>F2</kbd> / <kbd>Ctrl+E</kbd></dt><dd>Edytor rund, finału i importu</dd></div>
+            <div><dt><kbd>H</kbd></dt><dd>Pokaż / ukryj tę ściągawkę</dd></div>
+            <div><dt><kbd>S</kbd></dt><dd>Wycisz / włącz dźwięki</dd></div>
+            <div><dt><kbd>Spacja</kbd> / <kbd>Enter</kbd> (logo)</dt><dd>Start Rundy 1</dd></div>
+          </dl>
+        </section>
+
+        <section>
+          <h3>Rundy standardowe</h3>
+          <dl class="key-list">
+            <div><dt><kbd>1</kbd>–<kbd>8</kbd></dt><dd>Odkryj odpowiedź (<kbd>Shift+1..8</kbd> zakryj)</dd></div>
+            <div><dt><kbd>Q</kbd> / <kbd>P</kbd></dt><dd>Mały X: Lewa / Prawa (cykl 1&rarr;2&rarr;3&rarr;0)</dd></div>
+            <div><dt><kbd>W</kbd> / <kbd>O</kbd></dt><dd>Duży X (utrata szansy): Lewa / Prawa</dd></div>
+            <div><dt><kbd>0</kbd> (lub <kbd>C</kbd>)</dt><dd>Wyczyść wszystkie X</dd></div>
+            <div><dt><kbd>&larr;</kbd> / <kbd>&rarr;</kbd></dt><dd>Przyznaj pulę Lewej / Prawej drużynie</dd></div>
+            <div><dt><kbd>Spacja</kbd></dt><dd>Odkryj pozostałe odpowiedzi kaskadowo</dd></div>
+            <div><dt><kbd>Enter</kbd></dt><dd>Następny etap (płynne przejście)</dd></div>
+            <div><dt><kbd>Backspace</kbd></dt><dd>Poprzedni etap (płynne przejście)</dd></div>
+            <div><dt><kbd>Z</kbd></dt><dd>Cofnij ostatnią akcję (Undo)</dd></div>
+          </dl>
+        </section>
+
+        <section>
+          <h3>Finał</h3>
+          <dl class="key-list">
+            <div><dt><kbd>&uarr;</kbd> <kbd>&darr;</kbd> <kbd>&larr;</kbd> <kbd>&rarr;</kbd></dt><dd>Wybór wiersza (1–5) i gracza (1/2)</dd></div>
+            <div><dt><kbd>Enter</kbd></dt><dd>Wpisz hasło &rarr; zatwierdź &rarr; odkryj punkty</dd></div>
+            <div><dt><code>TEKST=42</code> / <kbd>P</kbd></dt><dd>Ukryte punkty w haśle / dyskretny wpis pkt</dd></div>
+            <div><dt><kbd>Spacja</kbd> / <kbd>R</kbd></dt><dd>Start/Pauza stopera / Reset (15s / 20s)</dd></div>
+            <div><dt><kbd>X</kbd> / <kbd>M</kbd></dt><dd>Brzęczyk powtórzenia / Ukryj Gracza 1</dd></div>
+            <div><dt><kbd>Backspace</kbd> / <kbd>PgUp</kbd></dt><dd>Wyczyść wiersz / Wróć do rund</dd></div>
+          </dl>
+        </section>
+      </div>
+      <footer class="modal-footer">
+        <span class="muted">Wskazówka: podczas turnieju klawisz <kbd>H</kbd> nigdy nie ujawnia odpowiedzi.</span>
+        <button type="button" class="btn btn-primary" data-close-help>Zamknij (<kbd>H</kbd>)</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Tryb edycji i importu (F2 / Ctrl+E) -->
+  <div id="editor-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="editor-title">
+    <div class="modal-card modal-card-wide">
+      <header class="modal-header">
+        <div>
+          <h2 id="editor-title">Tryb Edycji i Importu</h2>
+          <p class="muted small">Wszystkie zmiany zapisują się automatycznie w przeglądarce.</p>
+        </div>
+        <div class="header-actions">
+          <div id="editor-toast" class="toast hidden" role="status"></div>
+          <button type="button" id="btn-close-editor" class="btn btn-primary">Wróć do tablicy (<kbd>F2</kbd>)</button>
+        </div>
+      </header>
+
+      <nav class="tabs" role="tablist">
+        <button type="button" class="tab-btn active" data-tab="rounds" role="tab" aria-selected="true">Rundy standardowe</button>
+        <button type="button" class="tab-btn" data-tab="finale" role="tab" aria-selected="false">Finał (5 pytań)</button>
+        <button type="button" class="tab-btn" data-tab="audio" role="tab" aria-selected="false">Dźwięki i Wygląd</button>
+        <button type="button" class="tab-btn" data-tab="scores" role="tab" aria-selected="false">Wyniki i Karta</button>
+      </nav>
+
+      <div class="modal-body">
+        <!-- Zakładka 1: Rundy standardowe -->
+        <section class="tab-panel active" data-panel="rounds">
+          <div class="toolbar">
+            <div class="toolbar-group">
+              <button type="button" id="btn-import-game" class="btn btn-accent">Wgraj całą grę (JSON / CSV)</button>
+              <button type="button" id="btn-export-game-json" class="btn">Eksportuj JSON</button>
+              <button type="button" id="btn-export-game-csv" class="btn">Eksportuj CSV</button>
+            </div>
+            <div class="toolbar-group">
+              <button type="button" id="btn-dl-tpl-json" class="btn btn-ghost">Szablon gry JSON</button>
+              <button type="button" id="btn-dl-tpl-csv" class="btn btn-ghost">Szablon gry CSV</button>
+              <button type="button" id="btn-dl-tpl-stage-csv" class="btn btn-ghost">Szablon etapu CSV</button>
+            </div>
+          </div>
+
+          <div class="split-layout">
+            <aside class="sidebar">
+              <div class="sidebar-head">
+                <h3>Etapy gry</h3>
+                <button type="button" id="btn-add-round" class="btn btn-sm btn-primary">+ Dodaj rundę</button>
+              </div>
+              <ul id="rounds-list" class="stage-list"></ul>
+            </aside>
+            <div class="detail-pane" id="round-detail-pane"></div>
+          </div>
+        </section>
+
+        <!-- Zakładka 2: Finał -->
+        <section class="tab-panel" data-panel="finale">
+          <div class="toolbar">
+            <div class="toolbar-group">
+              <button type="button" id="btn-import-finale-all" class="btn btn-accent">Wgraj wszystkie pytania finału (JSON / CSV)</button>
+            </div>
+            <div class="toolbar-group inline-fields">
+              <label>Czas Gracz 1 (s):
+                <input type="number" id="inp-finale-t1" min="5" max="99" class="input-xs">
+              </label>
+              <label>Czas Gracz 2 (s):
+                <input type="number" id="inp-finale-t2" min="5" max="99" class="input-xs">
+              </label>
+              <label>Cel wygranej (pkt):
+                <input type="number" id="inp-finale-target" min="10" max="999" class="input-xs">
+              </label>
+            </div>
+          </div>
+          <div id="finale-editor-list" class="finale-editor-grid"></div>
+        </section>
+
+        <!-- Zakładka 3: Dźwięki i Wygląd -->
+        <section class="tab-panel" data-panel="audio">
+          <div class="settings-grid">
+            <div class="card-box">
+              <h3>Wygląd tablicy i czcionka</h3>
+              <div class="form-grid">
+                <label>
+                  <span>Nazwa turnieju (do druku / eksportu)</span>
+                  <input type="text" id="inp-game-title" maxlength="24" placeholder="LEGENDARIADA">
+                </label>
+                <label>
+                  <span>Kolor krzyżyków X (błędów)</span>
+                  <select id="sel-x-color">
+                    <option value="yellow">Klasyczny żółty TVP (familiada-10)</option>
+                    <option value="red">Czerwony (wyrazisty akcent)</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Prędkość animacji klapek</span>
+                  <select id="sel-flip-speed">
+                    <option value="classic">Klasyczna (fala mechaniczna)</option>
+                    <option value="fast">Szybka (turniejowa)</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Głośność efektów (<span id="lbl-volume">80%</span>)</span>
+                  <input type="range" id="inp-volume" min="0" max="100" step="1">
+                </label>
+              </div>
+              <div class="row-actions">
+                <label class="checkbox-inline">
+                  <input type="checkbox" id="chk-muted">
+                  <span>Wycisz wszystkie dźwięki</span>
+                </label>
+              </div>
+              <div class="font-upload-box">
+                <span class="sound-slot-name">Czcionka Familiada-10</span>
+                <span id="lbl-font-source" class="sound-slot-src">Wbudowana matryca Familiada-10 (by franusss)</span>
+                <div class="row-actions">
+                  <button type="button" id="btn-upload-ttf" class="btn btn-sm btn-accent">Wgraj własny plik .TTF</button>
+                  <button type="button" id="btn-reset-ttf" class="btn btn-sm btn-ghost hidden">Przywróć wbudowaną</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-box">
+              <h3>Efekty dźwiękowe (Syntezator + własne MP3/WAV/OGG)</h3>
+              <p class="muted small">Wgrane pliki audio zapisują się lokalnie w pamięci przeglądarki (IndexedDB).</p>
+              <div id="sound-slots-list" class="sound-slots"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Zakładka 4: Wyniki i Karta -->
+        <section class="tab-panel" data-panel="scores">
+          <div class="settings-grid">
+            <div class="card-box">
+              <h3>Punktacja bieżącego meczu</h3>
+              <div class="score-adjust-grid">
+                <label>
+                  <span>Punkty Lewa (Czerwona) drużyna</span>
+                  <input type="number" id="inp-score-left" min="0" max="9999">
+                </label>
+                <label>
+                  <span>Punkty Prawa (Niebieska) drużyna</span>
+                  <input type="number" id="inp-score-right" min="0" max="9999">
+                </label>
+              </div>
+              <div class="row-actions">
+                <button type="button" id="btn-apply-scores" class="btn btn-primary">Zastosuj wyniki</button>
+                <button type="button" id="btn-reset-match" class="btn">Resetuj punkty i rundy do startu</button>
+              </div>
+            </div>
+
+            <div class="card-box">
+              <h3>Karta prowadzącego i dane</h3>
+              <p class="muted small">Wydrukuj kartę z pytaniami, odpowiedziami i ściągawką klawiszy do ręki dla prowadzącego.</p>
+              <div class="row-actions">
+                <button type="button" id="btn-print-sheet" class="btn btn-accent">Drukuj kartę prowadzącego</button>
+                <button type="button" id="btn-go-title" class="btn">Pokaż ekran tytułowy</button>
+                <button type="button" id="btn-reset-demo" class="btn btn-danger">Przywróć zestaw demo</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ukryte inputy plikowe -->
+  <input type="file" id="file-input-hidden" class="hidden">
+
+  <!-- Karta do druku (widoczna wyłącznie w @media print) -->
+  <section id="print-sheet" aria-hidden="true"></section>
+
+  <script defer src="js/font.js"></script>
+  <script defer src="js/audio.js"></script>
+  <script defer src="js/defaultData.js"></script>
+  <script defer src="js/io.js"></script>
+  <script defer src="js/state.js"></script>
+  <script defer src="js/boardRenderer.js"></script>
+  <script defer src="js/editor.js"></script>
+  <script defer src="js/app.js"></script>
+</body>
+</html>
